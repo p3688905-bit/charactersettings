@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>影視角色設定與履歷書 (編劇專用)</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        serif: ['"Noto Serif TC"', 'serif'],
+                    },
+                    colors: {
+                        script: {
+                            dark: '#1e1e1e',
+                            panel: '#252526',
+                            accent: '#e2b340', // Gold for highlights
+                            text: '#d4d4d4',
+                            muted: '#858585',
+                            paper: '#ffffff',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #121212;
+            color: #d4d4d4;
+        }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4a4a4a;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5a5a5a;
+        }
+
+        .input-ghost {
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid #444;
+            color: #e2e2e2;
+            width: 100%;
+            padding: 4px 0;
+            transition: all 0.3s;
+        }
+        .input-ghost:focus {
+            outline: none;
+            border-bottom: 1px solid #e2b340;
+        }
+
+        .textarea-ghost {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid #333;
+            color: #d4d4d4;
+            width: 100%;
+            padding: 10px;
+            border-radius: 4px;
+            resize: vertical;
+            min-height: 80px;
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        .textarea-ghost:focus {
+            outline: none;
+            border-color: #e2b340;
+            background: rgba(255,255,255,0.05);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background-color: white;
+                color: black;
+                -webkit-print-color-adjust: exact;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+            .section-card {
+                background: white !important;
+                border: 1px solid #ddd !important;
+                color: black !important;
+                break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            .text-accent {
+                color: #000 !important;
+                font-weight: bold;
+            }
+            input, textarea {
+                border: none !important;
+                background: transparent !important;
+                color: black !important;
+                resize: none;
+                padding: 0;
+            }
+            ::placeholder {
+                color: transparent;
+            }
+            h1, h2, h3 {
+                color: black !important;
+            }
+            .badge {
+                border: 1px solid #000;
+                color: #000 !important;
+                background: transparent !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen font-sans antialiased selection:bg-script-accent selection:text-black pb-20">
+
+    <!-- Navbar / Actions -->
+    <nav class="fixed top-0 w-full bg-script-dark border-b border-gray-800 z-50 no-print">
+        <div class="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-feather-pointed text-script-accent text-xl"></i>
+                <span class="font-serif font-bold text-lg tracking-wider text-white">Character<span class="text-script-accent">Forge</span></span>
+            </div>
+            <div class="flex gap-3">
+                <!-- 新增：暂存功能按钮组 -->
+                <button onclick="saveDraft()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> 保存暫存
+                </button>
+                <button onclick="loadDraft()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> 加載暫存
+                </button>
+                <button onclick="clearDraft()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-trash"></i> 清空暫存
+                </button>
+                <!-- 原有导出按钮 -->
+                <button onclick="exportToWord()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded text-sm transition-colors flex items-center gap-2">
+                    <i class="fa-solid fa-file-word"></i> 導出 Word (.doc)
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="content-to-export" class="print-container max-w-5xl mx-auto mt-24 px-4 sm:px-6 lg:px-8">
+        
+        <!-- Header Section -->
+        <header class="mb-8 border-b border-gray-700 pb-6">
+            <div class="flex flex-col md:flex-row gap-6 items-start">
+                <!-- Avatar Upload Area -->
+                <div class="relative shrink-0">
+                    <input type="file" id="avatar-input" accept="image/*" class="hidden" onchange="previewImage(this)">
+                    <div id="avatar-container" onclick="document.getElementById('avatar-input').click()" 
+                         class="w-32 h-32 md:w-40 md:h-40 bg-gray-800 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-600 relative overflow-hidden group cursor-pointer hover:border-script-accent transition">
+                        
+                        <!-- Default Icon (hidden when image loaded) -->
+                        <div id="avatar-placeholder" class="text-center">
+                            <i class="fa-solid fa-camera text-2xl text-gray-500 mb-2 block group-hover:text-script-accent transition"></i>
+                            <span class="text-xs text-gray-500 group-hover:text-white transition">上傳照片</span>
+                        </div>
+
+                        <!-- Image Preview -->
+                        <img id="avatar-preview" class="hidden w-full h-full object-cover" alt="角色照片">
+                        
+                        <!-- Overlay on hover -->
+                        <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition duration-200">
+                             <span class="text-xs text-white font-bold">更換照片</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex-1 w-full">
+                    <div class="flex flex-col gap-2">
+                        <input type="text" placeholder="角色全名" class="bg-transparent text-4xl font-serif font-bold text-white placeholder-gray-600 focus:outline-none border-b border-transparent focus:border-script-accent transition w-full">
+                        <input type="text" placeholder="一句話形容這個角色 (Logline)" class="bg-transparent text-xl text-script-accent italic placeholder-gray-600 focus:outline-none w-full">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">年齡</label>
+                            <input type="text" class="input-ghost" placeholder="例如: 28歲">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">職業/身分</label>
+                            <input type="text" class="input-ghost" placeholder="例如: 刑警 / 駭客">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">星座/MBTI</label>
+                            <input type="text" class="input-ghost" placeholder="例如: 天蠍 / INTJ">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-gray-500 mb-1">原型 (Archetype)</label>
+                            <input type="text" class="input-ghost" placeholder="例如: 守護者 / 弄臣">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Two Column Layout -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Biography & Details -->
+            <div class="lg:col-span-2 space-y-8">
+                
+                <!-- Section: The Core (Soul) -->
+                <section class="section-card bg-script-panel p-6 rounded-lg border border-gray-800">
+                    <h2 class="text-xl font-serif font-bold text-script-accent mb-4 border-b border-gray-700 pb-2">
+                        <i class="fa-solid fa-heart-pulse mr-2"></i> 核心內在 (The Core)
+                    </h2>
+                    
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-2">外在目標 (Want)</label>
+                            <p class="text-xs text-gray-500 mb-2">他們在故事開始時具體想要得到的東西？（觀眾看得到的）</p>
+                            <textarea class="textarea-ghost" placeholder="例如：贏得全國辯論大賽冠軍，或找出殺害父親的兇手。"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-2">內在需求 (Need)</label>
+                            <p class="text-xs text-gray-500 mb-2">他們靈魂深處真正需要學會的教訓，通常與外在目標衝突。</p>
+                            <textarea class="textarea-ghost" placeholder="例如：學會放下控制欲，接受不完美。"></textarea>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">幽靈/創傷 (The Ghost)</label>
+                                <p class="text-xs text-gray-500 mb-2">過去發生的什麼事至今仍在糾纏他們？</p>
+                                <textarea class="textarea-ghost h-24" placeholder="童年陰影、一次失敗的任務..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-gray-300 mb-2">致命缺陷 (Fatal Flaw)</label>
+                                <p class="text-xs text-gray-500 mb-2">阻礙他們成功的性格弱點。</p>
+                                <textarea class="textarea-ghost h-24" placeholder="傲慢、膽怯、過度信任..."></textarea>
+                            </div>
+                        </div>
+                    </section>
+
+                <!-- Section: Biography (Resume) -->
+                <section class="section-card bg-script-panel p-6 rounded-lg border border-gray-800">
+                    <h2 class="text-xl font-serif font-bold text-script-accent mb-4 border-b border-gray-700 pb-2">
+                        <i class="fa-solid fa-timeline mr-2"></i> 人生履歷書 (Biography)
+                    </h2>
+                    
+                    <div class="relative border-l-2 border-gray-700 ml-3 space-y-8 pl-8 py-2">
+                        <!-- Timeline Item -->
+                        <div class="relative">
+                            <span class="absolute -left-[41px] top-1 bg-gray-800 border-2 border-script-accent rounded-full w-5 h-5"></span>
+                            <h3 class="text-sm font-bold text-gray-300">童年時期 (0-12歲)</h3>
+                            <p class="text-xs text-gray-500 mb-2">原生家庭氛圍？最早的記憶？誰影響最深？</p>
+                            <textarea class="textarea-ghost" placeholder="描述童年關鍵事件..."></textarea>
+                        </div>
+                        <!-- Timeline Item -->
+                        <div class="relative">
+                            <span class="absolute -left-[41px] top-1 bg-gray-800 border-2 border-gray-600 rounded-full w-5 h-5"></span>
+                            <h3 class="text-sm font-bold text-gray-300">青少年時期 (13-19歲)</h3>
+                            <p class="text-xs text-gray-500 mb-2">第一次叛逆？初戀？最大的挫折？</p>
+                            <textarea class="textarea-ghost" placeholder="描述青春期關鍵事件..."></textarea>
+                        </div>
+                         <!-- Timeline Item -->
+                         <div class="relative">
+                            <span class="absolute -left-[41px] top-1 bg-gray-800 border-2 border-gray-600 rounded-full w-5 h-5"></span>
+                            <h3 class="text-sm font-bold text-gray-300">成年/現狀 (Story Start)</h3>
+                            <p class="text-xs text-gray-500 mb-2">故事開始前的生活狀態 (Status Quo)。</p>
+                            <textarea class="textarea-ghost" placeholder="描述現在的生活處境..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Section: Narrative Arc -->
+                <section class="section-card bg-script-panel p-6 rounded-lg border border-gray-800">
+                    <h2 class="text-xl font-serif font-bold text-script-accent mb-4 border-b border-gray-700 pb-2">
+                        <i class="fa-solid fa-road mr-2"></i> 角色弧光 (The Arc)
+                    </h2>
+                    
+                    <div class="flex flex-col md:flex-row items-stretch gap-4 mb-6">
+                        <!-- 起點 -->
+                        <div class="flex-1 text-center p-4 bg-gray-900 rounded border border-gray-700 flex flex-col justify-center relative group">
+                            <span class="block text-xs text-gray-500 uppercase tracking-widest mb-1">起點 (Status Quo)</span>
+                            <input type="text" class="text-center bg-transparent w-full text-lg font-bold focus:outline-none text-red-300 mb-2" placeholder="例如：自私的混蛋">
+                            <p class="text-xs text-gray-600 leading-relaxed border-t border-gray-800 pt-2 mt-auto">
+                                尚未受到挑戰的「舊自我」。<br>此時他們依賴錯誤的信念（The Lie）生存，雖然安全但並不完整。
+                            </p>
+                        </div>
+
+                        <!-- Arrow -->
+                        <div class="flex items-center justify-center">
+                            <i class="fa-solid fa-arrow-right text-script-accent text-xl md:rotate-0 rotate-90"></i>
+                        </div>
+
+                        <!-- 終點 -->
+                        <div class="flex-1 text-center p-4 bg-gray-900 rounded border border-gray-700 flex flex-col justify-center">
+                            <span class="block text-xs text-gray-500 uppercase tracking-widest mb-1">終點 (Resolution)</span>
+                            <input type="text" class="text-center bg-transparent w-full text-lg font-bold focus:outline-none text-green-300 mb-2" placeholder="例如：無私的犧牲者">
+                            <p class="text-xs text-gray-600 leading-relaxed border-t border-gray-800 pt-2 mt-auto">
+                                經歷風暴後的「新自我」。<br>他們付出了代價，拋棄了面具，獲得了新的平衡與智慧。
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6 border-l border-gray-700 pl-4 ml-2">
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-1">1. 深信的謊言 (The Lie)</label>
+                            <p class="text-xs text-gray-500 mb-2">他們誤以為正確的信念是什麼？這如何阻礙他們獲得真正的快樂？</p>
+                            <textarea class="textarea-ghost" placeholder="例如：他認為「只有金錢才能帶來安全感」。"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-1">2. 抗拒改變 (The Resistance)</label>
+                            <p class="text-xs text-gray-500 mb-2">當故事開始挑戰這個信念時，他們如何防衛或拒絕？</p>
+                            <textarea class="textarea-ghost" placeholder="例如：他拒絕了公益活動的邀請，並嘲笑那些無償工作的人。"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-1">3. 靈魂黑夜 (All Hope Is Lost)</label>
+                            <p class="text-xs text-gray-500 mb-2">故事最低谷。舊的信念失效了，但還沒找到新的出路。他們失去了什麼？</p>
+                            <textarea class="textarea-ghost" placeholder="例如：他破產了，所有因錢而聚的朋友都離開了，他孤身一人。"></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-bold text-gray-300 mb-1">4. 關鍵抉擇 (The Choice/Truth)</label>
+                            <p class="text-xs text-gray-500 mb-2">在高潮時刻，他們做了什麼具體行動來證明自己擁抱了新的真理？</p>
+                            <textarea class="textarea-ghost" placeholder="例如：他用僅存的積蓄幫助了曾經被他嘲笑的人，即便這意味著他將一無所有。"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- Right Column: Traits & Relationships -->
+            <div class="lg:col-span-1 space-y-8">
+                
+                <!-- Appearance -->
+                <section class="section-card bg-script-panel p-6 rounded-lg border border-gray-800">
+                    <h3 class="text-lg font-bold text-white mb-3">
+                        <i class="fa-solid fa-shirt mr-2 text-script-accent"></i> 外貌特徵
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs text-gray-500">體型/身高</label>
+                            <input type="text" class="input-ghost" placeholder="...">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">髮型/瞳色</label>
+                            <input type="text" class="input-ghost" placeholder="...">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">穿衣風格</label>
+                            <input type="text" class="input-ghost" placeholder="...">
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">識別物/道具 (Props)</label>
+                            <input type="text" class="input-ghost" placeholder="例如：總是轉硬幣、戴著舊手錶">
+                        </div>
+                    </section>
+
+                <!-- Personality Traits -->
+                <section class="section-card bg-script-panel p-6 rounded-lg border border-gray-800">
+                    <h3 class="text-lg font-bold text-white mb-3">
+                        <i class="fa-solid fa-fingerprint mr-2 text-script-accent"></i> 行為與性格
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-500 block mb-1">關鍵形容詞 (Keywords)</label>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="badge px-2 py-1 bg-gray-700 rounded text-xs text-gray-300 border border-gray-600" contenteditable="true">點擊編輯</span>
+                                <span class="badge px-2 py-1 bg-gray-700 rounded text-xs text-gray-300 border border-gray-600" contenteditable="true">點擊編輯</span>
+                                <span class="badge px-2 py-1 bg-gray-700 rounded text-xs text-gray-300 border border-gray-600" contenteditable="true">點擊編輯</span>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">口頭禪/說話方式</label>
+                            <textarea class="textarea-ghost h-16" placeholder="語速快？喜歡用成語？髒話？"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">怪癖/習慣動作</label>
+                            <textarea class="textarea-ghost h-16" placeholder="緊張時會咬指甲..."></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500">最大的恐懼</label>
+                            <input type="text" class="input-ghost" placeholder="...">
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Relationships -->
+                <section class="section-card bg-script-panel p-6 rounded-lg border border-gray-800">
+                    <h3 class="text-lg font-bold text-white mb-3">
+                        <i class="fa-solid fa-users mr-2 text-script-accent"></i> 人際關係網絡
+                    </h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-xs text-gray-500 block border-b border-gray-700 pb-1 mb-2">盟友 / 朋友</label>
+                            <textarea class="textarea-ghost h-16" placeholder="誰支持他們？"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block border-b border-gray-700 pb-1 mb-2">對手 / 反派</label>
+                            <textarea class="textarea-ghost h-16" placeholder="誰阻礙他們？"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block border-b border-gray-700 pb-1 mb-2">愛人 / 情感對象</label>
+                            <textarea class="textarea-ghost h-16" placeholder="情感糾葛？"></textarea>
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 block border-b border-gray-700 pb-1 mb-2">導師 / 家人</label>
+                            <textarea class="textarea-ghost h-16" placeholder="權威角色？"></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Notes -->
+                <section class="section-card bg-script-panel p-6 rounded-lg border border-gray-800">
+                    <h3 class="text-lg font-bold text-white mb-3">
+                        <i class="fa-solid fa-note-sticky mr-2 text-script-accent"></i> 隨筆筆記
+                    </h3>
+                    <textarea class="textarea-ghost h-32" placeholder="演員參考、場景靈感、其他備註..."></textarea>
+                </section>
+
+            </div>
+        </div>
+
+        <footer class="mt-12 text-center text-gray-600 text-xs no-print pb-10">
+            <p>編劇角色開發工具 v1.0 | 建議使用 Chrome 瀏覽器</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Simple script to handle auto-expanding textareas for better UX
+        const textareas = document.querySelectorAll('textarea');
+        textareas.forEach(textarea => {
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        });
+
+        // Image Preview Handler
+        function previewImage(input) {
+            const preview = document.getElementById('avatar-preview');
+            const placeholder = document.getElementById('avatar-placeholder');
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('hidden');
+                    placeholder.classList.add('hidden');
+                }
+                
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // 新增：保存暂存功能
+        function saveDraft() {
+            try {
+                // 1. 收集所有输入框/文本域数据
+                const formData = {};
+                
+                // 收集普通input
+                const inputs = document.querySelectorAll('input:not([type="file"])');
+                inputs.forEach((input, index) => {
+                    formData[`input_${index}`] = input.value;
+                });
+                
+                // 收集textarea
+                const textareas = document.querySelectorAll('textarea');
+                textareas.forEach((textarea, index) => {
+                    formData[`textarea_${index}`] = textarea.value;
+                });
+                
+                // 收集contenteditable的badge
+                const badges = document.querySelectorAll('[contenteditable="true"]');
+                badges.forEach((badge, index) => {
+                    formData[`badge_${index}`] = badge.innerText;
+                });
+                
+                // 收集头像(base64)
+                const avatarPreview = document.getElementById('avatar-preview');
+                formData['avatar'] = avatarPreview.classList.contains('hidden') ? '' : avatarPreview.src;
+                
+                // 2. 保存到localStorage
+                localStorage.setItem('characterDraft', JSON.stringify(formData));
+                
+                // 提示保存成功
+                alert('✅ 暫存保存成功！\n(數據存儲在瀏覽器本地，清除瀏覽器緩存會導致數據丟失)');
+            } catch (e) {
+                alert('❌ 暫存保存失敗：' + e.message);
+            }
+        }
+
+        // 新增：加载暂存功能
+        function loadDraft() {
+            try {
+                // 1. 从localStorage读取数据
+                const draftData = localStorage.getItem('characterDraft');
+                if (!draftData) {
+                    alert('⚠️ 沒有找到暫存數據！');
+                    return;
+                }
+                const formData = JSON.parse(draftData);
+                
+                // 2. 恢复普通input
+                const inputs = document.querySelectorAll('input:not([type="file"])');
+                inputs.forEach((input, index) => {
+                    input.value = formData[`input_${index}`] || '';
+                });
+                
+                // 3. 恢复textarea (并重置高度)
+                const textareas = document.querySelectorAll('textarea');
+                textareas.forEach((textarea, index) => {
+                    textarea.value = formData[`textarea_${index}`] || '';
+                    // 触发高度自适应
+                    textarea.style.height = 'auto';
+                    textarea.style.height = (textarea.scrollHeight) + 'px';
+                });
+                
+                // 4. 恢复contenteditable的badge
+                const badges = document.querySelectorAll('[contenteditable="true"]');
+                badges.forEach((badge, index) => {
+                    badge.innerText = formData[`badge_${index}`] || '點擊編輯';
+                });
+                
+                // 5. 恢复头像
+                const avatarPreview = document.getElementById('avatar-preview');
+                const avatarPlaceholder = document.getElementById('avatar-placeholder');
+                if (formData['avatar']) {
+                    avatarPreview.src = formData['avatar'];
+                    avatarPreview.classList.remove('hidden');
+                    avatarPlaceholder.classList.add('hidden');
+                }
+                
+                // 提示加载成功
+                alert('✅ 暫存加載成功！');
+            } catch (e) {
+                alert('❌ 暫存加載失敗：' + e.message);
+            }
+        }
+
+        // 新增：清空暂存功能
+        function clearDraft() {
+            if (!confirm('⚠️ 確認要清空暫存數據嗎？此操作不可恢復！')) {
+                return;
+            }
+            
+            try {
+                // 1. 清除localStorage
+                localStorage.removeItem('characterDraft');
+                
+                // 2. 重置页面表单（可选：也可以保留表单内容，只清空存储）
+                const inputs = document.querySelectorAll('input:not([type="file"])');
+                inputs.forEach(input => input.value = '');
+                
+                const textareas = document.querySelectorAll('textarea');
+                textareas.forEach(textarea => {
+                    textarea.value = '';
+                    textarea.style.height = 'auto';
+                });
+                
+                const badges = document.querySelectorAll('[contenteditable="true"]');
+                badges.forEach(badge => badge.innerText = '點擊編輯');
+                
+                // 重置头像
+                const avatarPreview = document.getElementById('avatar-preview');
+                const avatarPlaceholder = document.getElementById('avatar-placeholder');
+                avatarPreview.classList.add('hidden');
+                avatarPlaceholder.classList.remove('hidden');
+                
+                alert('✅ 暫存已清空！');
+            } catch (e) {
+                alert('❌ 清空暫存失敗：' + e.message);
+            }
+        }
+
+        function exportToWord() {
+            // 1. 克隆主要內容，避免影響當前頁面
+            const originalContainer = document.getElementById('content-to-export');
+            const clone = originalContainer.cloneNode(true);
+
+            // 2. 移除不需要的元素 (如 footer, 圖片上傳 Input, 遮罩)
+            const noPrint = clone.querySelectorAll('.no-print, footer, input[type="file"], .absolute.inset-0.bg-black');
+            noPrint.forEach(el => el.remove());
+
+            // 3. 處理圖片上傳區域，確保它在 Word 裡顯示正常
+            const avatarContainer = clone.querySelector('#avatar-container');
+            const avatarPreview = clone.querySelector('#avatar-preview');
+            
+            // 如果有圖片，移除 placeholder 並確保圖片可見
+            if (avatarPreview && !avatarPreview.classList.contains('hidden')) {
+                // 將圖片從 container 拿出來，並重設大小，直接放成 img tag
+                const img = document.createElement('img');
+                img.src = avatarPreview.src;
+                img.width = 150; // 固定寬度
+                img.height = 150; // 固定高度
+                img.style.objectFit = 'cover';
+                
+                // 替換整個 container
+                avatarContainer.parentNode.replaceChild(img, avatarContainer);
+            } else {
+                // 如果沒圖片，顯示文字
+                const noImgText = document.createElement('div');
+                noImgText.innerText = "[無照片]";
+                noImgText.style.color = '#999';
+                avatarContainer.parentNode.replaceChild(noImgText, avatarContainer);
+            }
+
+
+            // 4. 將 Input 和 Textarea 的值轉換為純文字，以便在 Word 中顯示
+            const originalInputs = originalContainer.querySelectorAll('input:not([type="file"]), textarea');
+            const cloneInputs = clone.querySelectorAll('input:not([type="file"]), textarea');
+
+            for (let i = 0; i < originalInputs.length; i++) {
+                const input = originalInputs[i];
+                const cloneInput = cloneInputs[i];
+                
+                // 創建一個新的元素來顯示值
+                const textSpan = document.createElement('div');
+                textSpan.style.cssText = "font-weight: bold; color: #000; border-bottom: 1px solid #ccc; padding: 5px 0; margin-bottom: 10px;";
+                textSpan.innerText = input.value || "(未填寫)";
+                
+                // 替換原有的 input 標籤
+                cloneInput.parentNode.replaceChild(textSpan, cloneInput);
+            }
+
+            // 5. 處理 ContentEditable 的標籤 (關鍵詞)
+            const cloneBadges = clone.querySelectorAll('[contenteditable]');
+            cloneBadges.forEach(badge => {
+                const span = document.createElement('span');
+                span.innerText = badge.innerText + " | ";
+                badge.parentNode.replaceChild(span, badge);
+            });
+
+            // 6. 構建 Word HTML 模板
+            // 這裡我們加入一些基本的 CSS 讓 Word 排版好看一點 (白底黑字)
+            const htmlContent = `
+                <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+                <head>
+                    <meta charset="utf-8">
+                    <title>角色設定表</title>
+                    <style>
+                        body { font-family: 'PMingLiU', 'MingLiU', serif; color: #000000; background: #ffffff; }
+                        h1, h2, h3 { color: #000000; border-bottom: 2px solid #333; padding-bottom: 5px; margin-top: 20px; }
+                        label { color: #666; font-size: 0.9em; display: block; margin-top: 10px; }
+                        .section-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; }
+                    </style>
+                </head>
+                <body>
+                    ${clone.innerHTML}
+                </body>
+                </html>
+            `;
+
+            // 7. 創建 Blob 並觸發下載
+            const blob = new Blob(['\ufeff', htmlContent], {
+                type: 'application/msword'
+            });
+            
+            // 獲取角色名稱作為檔名
+            const charNameInput = originalContainer.querySelector('input[placeholder="角色全名"]');
+            const fileName = (charNameInput && charNameInput.value) ? `角色設定_${charNameInput.value}.doc` : '角色設定表.doc';
+
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+</body>
+</html>
